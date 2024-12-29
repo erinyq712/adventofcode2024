@@ -5,11 +5,10 @@ import org.jetbrains.annotations.NotNull;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static java.io.IO.println;
 
@@ -53,41 +52,26 @@ public class Day3 {
         }).reduce(0L, Long::sum);
     }
 
-    private static final Pattern splitPattern = Pattern.compile("(do|don't)\\(\\)");
+    private static final Pattern splitPattern = Pattern.compile("(mul|do|don't)\\(((\\d{1,3}),(\\d{1,3}))?\\)");
 
     private static void exercise2(List<String> lines) {
         var combinedLines = String.join("", lines);
         final Matcher matcher = splitPattern.matcher(combinedLines);
-        boolean includeNext = true;
-        List<String> list = new ArrayList<>();
-        var endpos = -1;
-        var startpos = 0;
-        if (matcher.find()) {
-            var instruction = matcher.group(0);
-            endpos = matcher.start(0);
-            list.add(combinedLines.substring(startpos,endpos));
-            startpos = endpos + instruction.length();
-            includeNext = "do()".equals(instruction);
-        } else {
-            list.add(combinedLines);
-        }
-        do {
-            if (matcher.find()) {
-                var instruction = matcher.group(0);
-                endpos = matcher.start(0);
-                if (includeNext) {
-                    list.add(combinedLines.substring(startpos, endpos));
-                }
-                startpos = endpos + instruction.length();
-                includeNext = "do()".equals(instruction);
-            } else {
-                if (includeNext) {
-                    list.add(combinedLines.substring(startpos));
-                }
-                startpos = -1;
+        long sum = 0;
+        boolean include = true;
+        while (matcher.find()) {
+            if (matcher.group(1).equals("mul") && include) {
+                var x = Integer.parseInt(matcher.group(matcher.groupCount()-1));
+                var y = Integer.parseInt(matcher.group(matcher.groupCount()));
+                sum += (long) x * y;
             }
-        } while (startpos > -1);
-        var result = compute(list);
-        println(result);
+            else if (matcher.group(1).equals("do")) {
+                include = true;
+            } else if (matcher.group(1).equals("don't")) {
+                include = false;
+            }
+            IntStream.range(0, matcher.groupCount()+1).forEach(i -> println(matcher.group(i)));
+        }
+        println(sum);
     }
 }
